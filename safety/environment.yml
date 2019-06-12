@@ -5,9 +5,11 @@ dependencies:
 - python=3.7.1
 - pandas=0.23.4
 - pip=19.0.3
+- scikit-learn
 - pip:
   - numpy==1.15.0
   - pandas==0.23.4
   - matplotlib==3.0.3
   - pyspark==2.4.0
   - xgboost==0.81
+  - hyperopt
