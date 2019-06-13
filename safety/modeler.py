@@ -7,22 +7,19 @@ import pandas as pd
 import xgboost as xgb
 from hyperopt import hp, tpe, STATUS_OK, Trials
 from hyperopt.fmin import fmin, space_eval
-from sklearn.metrics import precision_recall_curve, auc, roc_auc_score
 from sklearn.model_selection import KFold, train_test_split
 from xgboost import Booster
 
+from safety.evaluator import Evaluator
 
-class Evaluator:
-    def pr_auc_score(self, y_true, y_pred):
-        precision, recall, _ = precision_recall_curve(y_true, y_pred)
-        pr_auc = auc(recall, precision)
-        return pr_auc
 
-    def roc_auc_score(self, y_true, y_pred):
-        return roc_auc_score(y_true, y_pred)
+FOLDER_PATH = 'safety/models/xgboost/{}/'
 
 
 class Modeler:
+    def __init__(self):
+        pass
+
     def fit(self, X_train, y_train, param, *args, **kwargs):
         pass
 
@@ -38,6 +35,7 @@ class Modeler:
 
 class XGBoostModeler(Modeler):
     def __init__(self):
+        super(XGBoostModeler, self).__init__()
         self.model: Booster = None
 
     def fit(self, dtrain, dval, param, *args, **kwargs):
@@ -49,6 +47,8 @@ class XGBoostModeler(Modeler):
                                params=param)
 
     def predict(self, dtest):
+        if not isinstance(dtest, xgb.DMatrix):
+            dtest = xgb.DMatrix(data=dtest)
         return self.model.predict(dtest)
 
     def save(self, path):
@@ -141,13 +141,10 @@ class Optimizer:
 
     def run(self):
         t = int(time.time())
-        os.makedirs('safety/models/xgboost/{}/'.format(t), exist_ok=True)
+        os.makedirs(FOLDER_PATH.format(t), exist_ok=True)
 
         trials = Trials()
         best_param = self.optimize(trials)
-        print(best_param)
-        with open('safety/models/xgboost/{}/hyperparameter.json'.format(t), 'w') as f:
-            json.dump(best_param, f)
 
         X_train, X_val, y_train, y_val = train_test_split(self.X, self.y, test_size=.2, random_state=999)
         dtrain = xgb.DMatrix(data=X_train, label=y_train)
@@ -161,7 +158,9 @@ class Optimizer:
         self._modeler.fit(dtrain=dtrain, dval=dval, param=best_param, watchlist=watchlist, num_boost_round=num_round,
                           early_stopping_rounds=15)
 
-        self._modeler.save('safety/models/xgboost/{}/xgboost.model'.format(t))
+        self._modeler.save(FOLDER_PATH + 'xgboost.model'.format(t))
+        with open(FOLDER_PATH + 'hyperparameter.json'.format(t), 'w') as f:
+            json.dump(best_param, f)
 
 
 if __name__ == '__main__':

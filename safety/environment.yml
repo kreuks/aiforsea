@@ -13,3 +13,5 @@ dependencies:
   - pyspark==2.4.0
   - xgboost==0.81
   - hyperopt
+  - imblearn
+  - dill
