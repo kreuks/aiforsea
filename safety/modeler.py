@@ -1,14 +1,25 @@
 import json
 import os
+import time
 
 import numpy as np
 import pandas as pd
 import xgboost as xgb
 from hyperopt import hp, tpe, STATUS_OK, Trials
-from hyperopt.fmin import fmin
+from hyperopt.fmin import fmin, space_eval
 from sklearn.metrics import precision_recall_curve, auc, roc_auc_score
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, train_test_split
 from xgboost import Booster
+
+
+class Evaluator:
+    def pr_auc_score(self, y_true, y_pred):
+        precision, recall, _ = precision_recall_curve(y_true, y_pred)
+        pr_auc = auc(recall, precision)
+        return pr_auc
+
+    def roc_auc_score(self, y_true, y_pred):
+        return roc_auc_score(y_true, y_pred)
 
 
 class Modeler:
@@ -18,13 +29,11 @@ class Modeler:
     def predict(self, X_test):
         pass
 
-    def pr_auc_score(self, y_true, y_pred):
-        precision, recall, _ = precision_recall_curve(y_true, y_pred)
-        pr_auc = auc(recall, precision)
-        return pr_auc
+    def save(self, path):
+        pass
 
-    def roc_auc_score(self, y_true, y_pred):
-        return roc_auc_score(y_true, y_pred)
+    def load(self, path):
+        pass
 
 
 class XGBoostModeler(Modeler):
@@ -42,6 +51,13 @@ class XGBoostModeler(Modeler):
     def predict(self, dtest):
         return self.model.predict(dtest)
 
+    def save(self, path):
+        self.model.save_model(path)
+
+    def load(self, path):
+        self.model = xgb.Booster()
+        self.model.load_model(path)
+
 
 class LGBModeler(Modeler):
     def fit(self, X_train, y_train, param, *args, **kwargs):
@@ -54,6 +70,7 @@ class LGBModeler(Modeler):
 class Optimizer:
     def __init__(self, X, y):
         self._modeler = XGBoostModeler()
+        self._evaluator = Evaluator()
         self.X = X
         self.y = y
 
@@ -79,13 +96,13 @@ class Optimizer:
 
             y_pred_valid = self._modeler.predict(dval)
 
-            total_roc_auc += (self._modeler.roc_auc_score(y_valid, y_pred_valid) / n_fold)
+            total_roc_auc += (self._evaluator.roc_auc_score(y_valid, y_pred_valid) / n_fold)
 
         loss = 1 - total_roc_auc
         return {'loss': loss, 'status': STATUS_OK}
 
     def optimize(self, trials):
-        space = {'n_estimators': 20,
+        space = {'n_estimators': 500,
                  'booster': 'dart',
                  'sample_type': hp.choice('sample_type', ['uniform', 'weighted']),
                  'normalize_type': hp.choice('normalize_type', ['tree', 'forest']),
@@ -112,26 +129,47 @@ class Optimizer:
                  'nthread': 0,
                  'silent': 1}
 
-        best = fmin(self.scorer, space, algo=tpe.suggest, trials=trials, max_evals=1)
+        best = fmin(self.scorer, space, algo=tpe.suggest, trials=trials, max_evals=100)
+        best = space_eval(space, best)
 
         for k, v in best.items():
+            if k == 'max_depth':
+                v = int(v)
             space[k] = v
 
-        with open('safety/models/xgboost/best/hyperparameter.json', 'w') as f:
-            json.dump(space, f)
+        return space
 
     def run(self):
-        os.makedirs('safety/models/xgboost/best/', exist_ok=True)
+        t = int(time.time())
+        os.makedirs('safety/models/xgboost/{}/'.format(t), exist_ok=True)
+
         trials = Trials()
-        self.optimize(trials)
+        best_param = self.optimize(trials)
+        print(best_param)
+        with open('safety/models/xgboost/{}/hyperparameter.json'.format(t), 'w') as f:
+            json.dump(best_param, f)
+
+        X_train, X_val, y_train, y_val = train_test_split(self.X, self.y, test_size=.2, random_state=999)
+        dtrain = xgb.DMatrix(data=X_train, label=y_train)
+        dval = xgb.DMatrix(data=X_val, label=y_val)
+
+        watchlist = [(dtrain, 'train'), (dval, 'valid_data')]
+
+        num_round = int(best_param['n_estimators'])
+        del best_param['n_estimators']
+
+        self._modeler.fit(dtrain=dtrain, dval=dval, param=best_param, watchlist=watchlist, num_boost_round=num_round,
+                          early_stopping_rounds=15)
+
+        self._modeler.save('safety/models/xgboost/{}/xgboost.model'.format(t))
 
 
 if __name__ == '__main__':
     df = pd.read_csv('coba.csv')
     col = df.columns
-    # col = [x for x in col if not x.startswith('label_')]
-    # df = df[col]
+
     df_features = df[col[1:-1]]
     df_label = df[col[-1]]
+
     opt = Optimizer(df_features, df_label)
     opt.run()

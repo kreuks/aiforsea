@@ -17,4 +17,4 @@ if __name__ == '__main__':
     print('starting fe')
     fe = FeatureEngineering()
     df = fe.transform(df)
-    df.to_csv('coba.csv', header=True, index=False)
+    df.to_csv('coba-final.csv', header=True, index=False)
