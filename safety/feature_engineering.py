@@ -9,6 +9,7 @@ from sklearn.linear_model import LinearRegression
 
 from safety.util import logger
 
+# TODO move constant to constant.py to remove circular import python
 BOOKING_ID = 'bookingID'
 ACCURACY = 'Accuracy'
 BEARING = 'Bearing'
@@ -170,20 +171,23 @@ class FeatureEngineering:
             change = np.mean(change)
             return change
 
-        logger.info('start mean change rate acc')
-        df_acc_change_rate = df.groupby(BOOKING_ID).apply(__calc_change_rate, TOTAL_ACC).reset_index()
-        df_acc_change_rate.columns = [BOOKING_ID, TOTAL_ACC_MEAN_CHANGE_RATE + additional_col_name]
-        logger.info('finish mean change rate acc')
+        # total_acc, total_gyro, and Speed has many zero values,
+        # thus mean change rate speed can be very large number (inf) and has no meaning
 
-        logger.info('start mean change rate gyro')
-        df_gyro_change_rate = df.groupby(BOOKING_ID).apply(__calc_change_rate, TOTAL_GYRO).reset_index()
-        df_gyro_change_rate.columns = [BOOKING_ID, TOTAL_GYRO_MEAN_CHANGE_RATE + additional_col_name]
-        logger.info('finish mean change rate gyro')
+        # logger.info('start mean change rate acc')
+        # df_acc_change_rate = df.groupby(BOOKING_ID).apply(__calc_change_rate, TOTAL_ACC).reset_index()
+        # df_acc_change_rate.columns = [BOOKING_ID, TOTAL_ACC_MEAN_CHANGE_RATE + additional_col_name]
+        # logger.info('finish mean change rate acc')
+        #
+        # logger.info('start mean change rate gyro')
+        # df_gyro_change_rate = df.groupby(BOOKING_ID).apply(__calc_change_rate, TOTAL_GYRO).reset_index()
+        # df_gyro_change_rate.columns = [BOOKING_ID, TOTAL_GYRO_MEAN_CHANGE_RATE + additional_col_name]
+        # logger.info('finish mean change rate gyro')
 
-        logger.info('start mean change rate speed')
-        df_speed_change_rate = df.groupby(BOOKING_ID).apply(__calc_change_rate, SPEED).reset_index()
-        df_speed_change_rate.columns = [BOOKING_ID, SPEED_MEAN_CHANGE_RATE + additional_col_name]
-        logger.info('finish mean change rate speed')
+        # logger.info('start mean change rate speed')
+        # df_speed_change_rate = df.groupby(BOOKING_ID).apply(__calc_change_rate, SPEED).reset_index()
+        # df_speed_change_rate.columns = [BOOKING_ID, SPEED_MEAN_CHANGE_RATE + additional_col_name]
+        # logger.info('finish mean change rate speed')
 
         logger.info('start mean change acc')
         df_acc_mean_change = df[[BOOKING_ID, TOTAL_ACC]].groupby(BOOKING_ID).apply(np.diff).apply(np.mean).reset_index()
@@ -201,12 +205,9 @@ class FeatureEngineering:
         df_speed_mean_change.columns = [BOOKING_ID, SPEED_MEAN_CHANGE + additional_col_name]
         logger.info('finish mean change gyro')
 
-        list_of_df = [df_acc_change_rate,
-                   df_gyro_change_rate,
-                   df_speed_change_rate,
-                   df_acc_mean_change,
-                   df_gyro_mean_change,
-                   df_speed_mean_change]
+        list_of_df = [df_acc_mean_change,
+                      df_gyro_mean_change,
+                      df_speed_mean_change]
 
         df = self.__merge_df(list_of_df)
         return df
@@ -245,11 +246,11 @@ class FeatureEngineering:
         df_speed_hann_mean.columns = [BOOKING_ID, SPEED_HANN_MEAN]
 
         list_of_df = [df_acc_hilbert_mean,
-                   df_acc_hann_mean,
-                   df_gyro_hilbert_mean,
-                   df_gyro_hann_mean,
-                   df_speed_hilbert_mean,
-                   df_speed_hann_mean]
+                      df_acc_hann_mean,
+                      df_gyro_hilbert_mean,
+                      df_gyro_hann_mean,
+                      df_speed_hilbert_mean,
+                      df_speed_hann_mean]
 
         df = self.__merge_df(list_of_df)
 
