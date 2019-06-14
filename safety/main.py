@@ -4,7 +4,7 @@ import glob
 import pandas as pd
 
 from safety.feature_engineering import FeatureEngineering, BOOKING_ID, LABEL
-from safety.modeler import XGBoostModeler, Optimizer
+from safety.modeler import XGBoostModeler, XGBoostOptimizer, LGBMOptimizer
 from safety.util import logger, read_multiple_csv_pandas, random_under_sampling
 
 if __name__ == '__main__':
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-o', '--output_path', type=str,
         help='Output path for prediction result.',
-        required=True
+        required=False
     )
 
     args = parser.parse_args()
@@ -53,12 +53,15 @@ if __name__ == '__main__':
         logger.info('start modeling')
 
         df = pd.merge(df_features, df_label, on=BOOKING_ID, how='left')
-        df = random_under_sampling(df, negative_ratio=2)
+
         df_column = df.columns
         df_features = df[df_column[1:-1]]
         df_label = df[LABEL]
 
-        opt = Optimizer(df_features, df_label)
+        opt = XGBoostOptimizer(df_features, df_label)
+        opt.run()
+
+        opt = LGBMOptimizer(df_features, df_label)
         opt.run()
 
         logger.info('finish modeling')
