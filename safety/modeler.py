@@ -124,7 +124,7 @@ class XGBoostOptimizer(Optimizer):
             watchlist = [(dtrain, 'train'), (dval, 'valid_data')]
 
             self._modeler.fit(dtrain=dtrain, dval=dval, param=params, watchlist=watchlist, num_boost_round=num_round,
-                              early_stopping_rounds=15)
+                              early_stopping_rounds=50)
 
             y_pred_valid = self._modeler.predict(dval)
 
@@ -188,7 +188,7 @@ class XGBoostOptimizer(Optimizer):
         del best_param['n_estimators']
 
         self._modeler.fit(dtrain=dtrain, dval=dval, param=best_param, watchlist=watchlist, num_boost_round=num_round,
-                          early_stopping_rounds=15)
+                          early_stopping_rounds=50)
 
         self._modeler.save(XGBOOST_MODEL_FOLDER_PATH.format(t) + 'xgboost.model')
         with open(XGBOOST_MODEL_FOLDER_PATH.format(t) + 'hyperparameter.json', 'w') as f:
@@ -217,7 +217,7 @@ class LGBMOptimizer(Optimizer):
             dval = lgb.Dataset(data=X_valid, label=y_valid)
 
             self._modeler.fit(dtrain=dtrain, dval=dval, param=params, num_boost_round=num_round,
-                              early_stopping_rounds=15)
+                              early_stopping_rounds=50)
 
             y_pred_valid = self._modeler.predict(X_valid)
 
@@ -227,7 +227,7 @@ class LGBMOptimizer(Optimizer):
         return {'loss': loss, 'status': STATUS_OK}
 
     def optimize(self, trials):
-        space = {'n_estimators': 125,
+        space = {'n_estimators': 500,
                  'boosting_type': 'dart',
                  'num_leaves': hp.choice('num_leaves', np.arange(20, 60, dtype=int)),
                  'max_depth': hp.choice('max_depth', np.arange(1, 30, dtype=int)),
@@ -277,7 +277,7 @@ class LGBMOptimizer(Optimizer):
         del best_param['n_estimators']
 
         self._modeler.fit(dtrain=dtrain, dval=dval, param=best_param, num_boost_round=num_round,
-                          early_stopping_rounds=15)
+                          early_stopping_rounds=50)
 
         self._modeler.save(LGB_MODEL_FOLDER_PATH.format(t) + 'lightgbm.model')
         with open(LGB_MODEL_FOLDER_PATH.format(t) + 'hyperparameter.json', 'w') as f:
