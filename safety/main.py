@@ -48,7 +48,6 @@ if __name__ == '__main__':
 
         fe = FeatureEngineering()
         df_features = fe.transform(df_features)
-        df_features = df_features[TOP_100_FEATURE_IMPORTANCE]
 
         logger.info('finished feature engineering')
         logger.info('start modeling')
@@ -57,6 +56,7 @@ if __name__ == '__main__':
 
         df_column = df.columns
         df_features = df[df_column[1:-1]]
+        df_features = df_features[TOP_100_FEATURE_IMPORTANCE]
         df_label = df[LABEL]
 
         opt = XGBoostOptimizer(df_features, df_label)
@@ -82,14 +82,14 @@ if __name__ == '__main__':
         fe = FeatureEngineering()
         df = fe.transform(df)
 
-        # select top 100 feature importance
-        df = df[TOP_100_FEATURE_IMPORTANCE]
-
         logger.info('finished feature engineering')
         logger.info('start predict')
 
         booking_ids = df[BOOKING_ID].values
         df = df.drop(BOOKING_ID, axis=1)
+
+        # select top 100 feature importance
+        df = df[TOP_100_FEATURE_IMPORTANCE]
 
         model_path = sorted(glob.glob('safety/models/xgboost/*/*.model'))[-1]
 
