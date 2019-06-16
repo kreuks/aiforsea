@@ -1,0 +1,9 @@
+experiment_id,changes,average_roc_auc_xgboost,average_roc_auc_lightgbm
+1,add more features,0.7575209237,0.7572340679
+2,with log1p,0.7553436078,0.7574322639
+3,random under sampling 1:1,0.7445898534,0.7413740995
+4,random under sampling 1:2,0.7485843758,0.7487588643
+5,top 50 feature from exp id 1 model,0.7632031738,0.7568524893
+6,top 100 feature from exp id 1 model,0.7638695191,0.7555835581
+7,top 150 feature from exp id 1 model,0.7583438621,0.7574264767
+8,top 200 feature from exp id 1 model,0.7622135446,0.7570749568
