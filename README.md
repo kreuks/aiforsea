@@ -43,3 +43,13 @@ aiforsea
 - Change directory to root dir (`aiforsea/`)
 - Type `python -m safety.main -m training -if <input_features_folder> -il <input_label_folder>`
 - Example: `python -m safety.main -m training -if 'safety/data/features/' -il 'safety/data/labels/'` 
+#### 5. Result File
+- Result csv only contain `bookingID` and `probability` columns, example:
+```
+bookingID,probability
+26,0.12587701
+35,0.15085416
+39,0.5503819
+74,0.15658276
+76,0.355189
+```
