@@ -347,6 +347,13 @@ class FeatureEngineering:
             df = pd.merge(df, df_, on=on, how=how)
         return df
 
+    # This method was not used to to low performance with log1p
+    @staticmethod
+    def __log_1p_transformation(df: pd.DataFrame, col_list: List[str]):
+        for col in col_list:
+            df[col] = np.log1p(df[col] + 10)
+        return df
+
     def transform(self, df: pd.DataFrame):
         df_label = None
 
