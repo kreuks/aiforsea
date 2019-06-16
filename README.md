@@ -37,7 +37,7 @@ aiforsea
 
 #### 3. Predict
 - Change directory to root dir (`aiforsea/`)
-- Type `python -m safety.main -m predict -if <input_folder> -o <output_file_path>`
+- Type `python -m safety.main -m predict -if <input_features_folder> -o <output_file_path>`
 - Example: `python -m safety.main -m predict -if 'safety/data/features' -o result.csv`
 #### 4. Training
 - Change directory to root dir (`aiforsea/`)
