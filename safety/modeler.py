@@ -134,7 +134,7 @@ class XGBoostOptimizer(Optimizer):
         return {'loss': loss, 'status': STATUS_OK}
 
     def optimize(self, trials):
-        space = {'n_estimators': 500,
+        space = {'n_estimators': 1000,
                  'booster': 'dart',
                  'sample_type': hp.choice('sample_type', ['uniform', 'weighted']),
                  'normalize_type': hp.choice('normalize_type', ['tree', 'forest']),
