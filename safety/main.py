@@ -5,7 +5,7 @@ import pandas as pd
 
 from safety.feature_engineering import FeatureEngineering, BOOKING_ID, LABEL
 from safety.modeler import XGBoostModeler, XGBoostOptimizer, LGBMOptimizer
-from safety.util import logger, read_multiple_csv_pandas, random_under_sampling
+from safety.util import logger, read_multiple_csv_pandas, TOP_100_FEATURE_IMPORTANCE
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -48,6 +48,7 @@ if __name__ == '__main__':
 
         fe = FeatureEngineering()
         df_features = fe.transform(df_features)
+        df_features = df_features[TOP_100_FEATURE_IMPORTANCE]
 
         logger.info('finished feature engineering')
         logger.info('start modeling')
@@ -80,6 +81,9 @@ if __name__ == '__main__':
 
         fe = FeatureEngineering()
         df = fe.transform(df)
+
+        # select top 100 feature importance
+        df = df[TOP_100_FEATURE_IMPORTANCE]
 
         logger.info('finished feature engineering')
         logger.info('start predict')
