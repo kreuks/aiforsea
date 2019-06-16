@@ -5,14 +5,14 @@ dependencies:
 - python=3.7.1
 - pandas=0.23.4
 - pip=19.0.3
-- scikit-learn
+- scikit-learn=0.21.2
 - pip:
   - numpy==1.15.0
   - pandas==0.23.4
   - matplotlib==3.0.3
   - pyspark==2.4.0
   - xgboost==0.81
-  - hyperopt
-  - imblearn
-  - dill
-  - lightgbm
+  - hyperopt==0.1.2
+  - imbalanced-learn==0.4.3
+  - dill==0.2.9
+  - lightgbm==2.2.3
