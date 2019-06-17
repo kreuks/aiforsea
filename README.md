@@ -53,3 +53,5 @@ bookingID,probability
 74,0.15658276
 76,0.355189
 ```
+#### 6. Notebook
+- If you want to see jupyter notebook analysis, you can start `jupyter notebook` and some notebook can be accessed in `safety/notebook/` folder
